@@ -2,7 +2,14 @@
 #include <sys/stat.h>
 
 #include "hphp/runtime/ext/extension.h"
+#include "hphp/runtime/base/hphp-system.h"
 #include "hphp/runtime/base/array-init.h"
+#include "hphp/runtime/vm/func.h"
+#include "hphp/runtime/vm/runtime.h"
+#include "hphp/runtime/vm/jit/translator.h"
+#include "hphp/runtime/vm/jit/translator-inline.h"
+#include "hphp/system/systemlib.h"
+
 #include "VaeQueryLanguageLexer.h"
 #include "VaeQueryLanguageParser.h"
 #include "VaeQueryLanguageTreeParser.h"
@@ -10,6 +17,15 @@
 #include "vaeql.h"
 
 #define EMPTY_STRING ""
+
+char * resolveVariable(char * variable) {
+printf("12345!!!\n");
+printf("%s\n", variable);
+  auto res = HPHP::vm_call_user_func(HPHP::Variant("_vaeql_variable"), variable);
+printf("67890!!!\n");
+  //return variable;
+  return (char *)res.toString().c_str();
+}
 
 namespace HPHP {
 
@@ -42,39 +58,26 @@ static Variant HHVM_FUNCTION(_vaeql_query_internal, const Variant& arg) {
   VaeQueryLanguageTreeParser_start_return result;
   
   /* Lex and Parse */
-  if (istream = antlr3NewAsciiStringInPlaceStream((uint8_t *)query.c_str(), (ANTLR3_UINT64)query.length(), NULL)) {
-    if (lxr	= VaeQueryLanguageLexerNew(istream)) {
-      if (tstream = antlr3CommonTokenStreamSourceNew(ANTLR3_SIZE_HINT, TOKENSOURCE(lxr))) {
-        if (psr	= VaeQueryLanguageParserNew(tstream)) {
+  istream = antlr3NewAsciiStringInPlaceStream((uint8_t *)query.c_str(), (ANTLR3_UINT64)query.length(), NULL);
+  if (istream != NULL) {
+    lxr = VaeQueryLanguageLexerNew(istream);
+    if (lxr != NULL) {
+      tstream = antlr3CommonTokenStreamSourceNew(ANTLR3_SIZE_HINT, TOKENSOURCE(lxr));
+      if (tstream != NULL) {
+        psr = VaeQueryLanguageParserNew(tstream);
+        if (psr != NULL) {
           langAST = psr->start(psr);
           if (psr->pParser->rec->state->errorCount == 0) {
-            if (nodes = antlr3CommonTreeNodeStreamNewTree(langAST.tree, ANTLR3_SIZE_HINT)) {
-              if (treePsr = VaeQueryLanguageTreeParserNew(nodes)) {
+            nodes = antlr3CommonTreeNodeStreamNewTree(langAST.tree, ANTLR3_SIZE_HINT);
+            if (nodes != NULL) {
+              treePsr = VaeQueryLanguageTreeParserNew(nodes);
+              if (treePsr != NULL) {
                 result = treePsr->start(treePsr);
                 if (result.result) {
-//                  arr_val[0] = String(result.isPath);
-//		  arr_val[1] = String((const char *)result.result->chars);
-
-Array ret;
-ret.set(s_first, String(result.isPath));
-ret.set(s_second, String((const char *)result.result->chars));
-/*
-SAFEARRAY * pSafeArray;
-SAFEARRAYBOUND aDim[1];
-aDim[0].lLbound = 0;
-aDim[0].cElements = 2;
-variant.vt = VT_ARRAY | VT_BSTR;
-pSafeArray = SafeArrayCreate(VT_BSTR, 1, aDim);
-BSTR* dwArray = NULL;
-SafeArrayAccessData(pSafeArray, (void**)&dwArray);
-dwArray[0] = String(result.isPath).c_str();
-dwArray[1] = String((const char *)result.result->chars).c_str();
-SafeArrayUnaccessData(pSafeArray);
-variant.parray = pSafeArray;
-
-                  return variant; 
-*/
-return ret;
+                  Array ret;
+                  ret.set(s_first, String(result.isPath));
+                  ret.set(s_second, String((const char *)result.result->chars));
+                  return ret;
                 } else {
                   int_val = -2;
                 }
