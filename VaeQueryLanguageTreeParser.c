@@ -1462,7 +1462,7 @@ evaledExpr(pVaeQueryLanguageTreeParser ctx)
                         result= expr6.result;
                         char *value = resolvePath(expr6.result->chars);
                         result->set8(result, value);
-                        free(value);
+                        if (value) free(value);
                       } else {
                         result= expr6.result;
                       }
@@ -5916,9 +5916,11 @@ variable(pVaeQueryLanguageTreeParser ctx)
             {
 
                       result= (VARIABLE51->getText(VARIABLE51))->subString((VARIABLE51->getText(VARIABLE51)), 1, strlen((VARIABLE51->getText(VARIABLE51))->chars));
+
                       char *value = resolveVariable(result->chars);
+
                       result->set8(result, value);
-                      free(value);
+                      if (value) free(value);
                     
             }
 

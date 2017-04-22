@@ -16,15 +16,72 @@
 
 #include "vaeql.h"
 
-#define EMPTY_STRING ""
+
+char * resolveFunction(char * function, char ** args) {
+  HPHP::Array params = HPHP::Array::Create();
+  params.append(function);
+  HPHP::Array ar_args = HPHP::Array::Create();
+  for (char ** arg = args; *arg; arg++) {
+    ar_args.append(*arg);
+  }
+  params.append(ar_args);
+  auto res = HPHP::vm_call_user_func("_vaeql_function", HPHP::Variant{params}, false);
+  char * ret = new char[res.toString().length()];
+  strcpy(ret, res.toString().c_str());
+printf("resolveFunction() = %s\n", ret); 
+  return ret;
+}
+
+RangeFunctionRange resolveRangeFunction(char * function, char ** args) {
+  RangeFunctionRange r;
+  r.low = 0;
+  r.high = 0;
+  HPHP::Array params = HPHP::Array::Create();
+  params.append(function);
+  HPHP::Array ar_args = HPHP::Array::Create();
+  for (char ** arg = args; *arg; arg++) {
+    ar_args.append(*arg);
+  }
+  params.append(ar_args);
+  auto res = HPHP::vm_call_user_func("_vaeql_range_function", HPHP::Variant{params}, false);
+  if (!res.isArray()) {
+    return r;
+  }
+  HPHP::Array ret_val = res.toArray();
+  if (!ret_val.size()) {
+    return r;
+  }
+  r.high = 99999999999999;
+  if (!ret_val.lvalAt(0).isNull()) {
+    auto r0 = ret_val.lvalAt(0);
+    if (r0.isInteger()) {
+      r.low = r0.toInt64Val();
+    }
+  }
+  if (!ret_val.lvalAt(1).isNull()) {
+    auto r1 = ret_val.lvalAt(1);
+    if (r1.isInteger()) {
+      r.high = r1.toInt64Val();
+    }
+  }
+printf("range -> %ld-%ld\n", r.low, r.high);
+  return r;
+}
+
+char * resolvePath(char * variable) {
+  auto res = HPHP::vm_call_user_func("_vaeql_path", HPHP::Variant{HPHP::Array::Create(variable)}, false);
+  char * ret = new char[res.toString().length()];
+  strcpy(ret, res.toString().c_str());
+printf("resolvePath(%s) = %s\n", variable, ret); 
+  return ret;
+}
 
 char * resolveVariable(char * variable) {
-printf("12345!!!\n");
-printf("%s\n", variable);
-  auto res = HPHP::vm_call_user_func(HPHP::Variant("_vaeql_variable"), variable);
-printf("67890!!!\n");
-  //return variable;
-  return (char *)res.toString().c_str();
+  auto res = HPHP::vm_call_user_func("_vaeql_variable", HPHP::Variant{HPHP::Array::Create(variable)}, false);
+  char * ret = new char[res.toString().length()];
+  strcpy(ret, res.toString().c_str());
+printf("resolveVariable(%s) = %s\n", variable, ret); 
+  return ret;
 }
 
 namespace HPHP {
@@ -34,6 +91,7 @@ const StaticString
   s_second("1");
 
 static Variant HHVM_FUNCTION(_vaeql_query_internal, const Variant& arg) {
+  VMRegAnchor _;
   int64_t int_val;
   String arr_val[2];
   
