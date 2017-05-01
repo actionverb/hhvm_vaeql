@@ -49,12 +49,26 @@ To compile libantlr3c:
     apt install hhvm hhvm-dev libgoogle-glog-dev libtbb-dev
 
 
-### Installing prerequisites on Mac
+### Installing prerequisites on Mac OS X
 
-In progress..
+We use Vaeql as native extension for HHVM, so we need to build (or rebuild) all HHVM from source.
+
+    brew install llvm
+    brew install freetype gettext cmake libtool mcrypt oniguruma  \
+             autoconf libelf readline automake md5sha1sum \
+             gd icu4c libmemcached pkg-config tbb imagemagick@6 \
+             libevent sqlite openssl glog boost lz4 pcre \
+             gawk jemalloc ocaml gmp dwarfutils libzip
+    git clone --recursive git://github.com/facebook/hhvm.git
+
+
+
+
 
 
 ## Compiling
+
+Only for Linux. We don't need to do this on Mac OS X.
 
     hphpize
     cmake .
@@ -67,7 +81,16 @@ This project is tested entirely using the test suite in Vae Remote.  It
 is very easy to add more tasks to that test suite and we likely do not
 need one here.
 
+
+### Testing on Linux
+
     cd vae_remote
     hhvm -vDynamicExtensions.0=/path/to/extension/vaeql.so -vEval.Jit=true tests/_all.php
+
+
+### Testing on Mac OS X
+
+    cd vae_remote
+    hhvm tests/_all.php
 
 
