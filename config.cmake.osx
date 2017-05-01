@@ -1,0 +1,16 @@
+HHVM_DEFINE_EXTENSION("vaeql"
+  SOURCES
+    ext_vaeql.cpp
+    VaeQueryLanguageLexer.c
+    VaeQueryLanguageParser.c
+    VaeQueryLanguageTreeParser.c
+  HEADERS
+    vaeql.h
+    VaeQueryLanguageLexer.h
+    VaeQueryLanguageParser.h
+    VaeQueryLanguageTreeParser.h
+  SYSTEMLIB
+    ext_vaeql.php
+  DEPENDS
+    libantlr3c
+)
