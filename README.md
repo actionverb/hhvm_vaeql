@@ -56,6 +56,8 @@ In progress..
 
 ## Compiling
 
+    hphpize
+    cmake .
     make
     
 
