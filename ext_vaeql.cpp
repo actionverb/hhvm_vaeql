@@ -28,7 +28,6 @@ char * resolveFunction(char * function, char ** args) {
   auto res = HPHP::vm_call_user_func("_vaeql_function", HPHP::Variant{params}, false);
   char * ret = new char[res.toString().length()];
   strcpy(ret, res.toString().c_str());
-printf("resolveFunction() = %s\n", ret); 
   return ret;
 }
 
@@ -64,7 +63,6 @@ RangeFunctionRange resolveRangeFunction(char * function, char ** args) {
       r.high = r1.toInt64Val();
     }
   }
-printf("range -> %ld-%ld\n", r.low, r.high);
   return r;
 }
 
@@ -72,7 +70,6 @@ char * resolvePath(char * variable) {
   auto res = HPHP::vm_call_user_func("_vaeql_path", HPHP::Variant{HPHP::Array::Create(variable)}, false);
   char * ret = new char[res.toString().length()];
   strcpy(ret, res.toString().c_str());
-printf("resolvePath(%s) = %s\n", variable, ret); 
   return ret;
 }
 
@@ -80,7 +77,6 @@ char * resolveVariable(char * variable) {
   auto res = HPHP::vm_call_user_func("_vaeql_variable", HPHP::Variant{HPHP::Array::Create(variable)}, false);
   char * ret = new char[res.toString().length()];
   strcpy(ret, res.toString().c_str());
-printf("resolveVariable(%s) = %s\n", variable, ret); 
   return ret;
 }
 
