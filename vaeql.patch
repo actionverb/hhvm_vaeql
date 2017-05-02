@@ -1,0 +1,92 @@
+From f5c7b4926aa4504f56f33d2dce78c276ec2f6918 Mon Sep 17 00:00:00 2001
+From: klim <klim@MacBook-Pro-klim.local>
+Date: Tue, 2 May 2017 04:15:58 +0300
+Subject: [PATCH] Patch making
+
+---
+ CMake/FindAntlr3c.cmake         | 30 ++++++++++++++++++++++++++++++
+ CMake/HHVMExtensionConfig.cmake | 12 ++++++++++++
+ hphp/util/hphp-config.h.in      |  3 ++-
+ 3 files changed, 44 insertions(+), 1 deletion(-)
+ create mode 100644 CMake/FindAntlr3c.cmake
+
+diff --git a/CMake/FindAntlr3c.cmake b/CMake/FindAntlr3c.cmake
+new file mode 100644
+index 0000000..6df4865
+--- /dev/null
++++ b/CMake/FindAntlr3c.cmake
+@@ -0,0 +1,30 @@
++find_path(Antlr3c_INCLUDE_DIR antlr3.h PATHS
++    /usr/local/include
++    /opt/local/include
++  )
++
++set(Antlr3c_LIB_PATHS /usr/local/lib /opt/local/lib /usr/lib64)
++find_library(Antlr3c_LIB NAMES antlr3c PATHS ${Antlr3c_LIB_PATHS})
++
++if (Antlr3c_LIB AND Antlr3c_INCLUDE_DIR)
++  set(Antlr3c_FOUND TRUE)
++  set(Antlr3c_LIBS ${Antlr3c_LIB})
++else ()
++  set(Antlr3c_FOUND FALSE)
++endif ()
++
++if (Antlr3c_FOUND)
++  if (NOT Antlr3c_FIND_QUIETLY)
++    message(STATUS "Found antlr3c: ${Antlr3c_LIBS}")
++  endif ()
++else ()
++  if (Antlr3c_FIND_REQUIRED)
++    message(FATAL_ERROR "Could NOT find antlr3c library.")
++  endif ()
++  message(STATUS "antlr3c NOT found.")
++endif ()
++
++mark_as_advanced(
++    Antlr3c_LIB
++    Antlr3c_INCLUDE_DIR
++  )
+diff --git a/CMake/HHVMExtensionConfig.cmake b/CMake/HHVMExtensionConfig.cmake
+index 045cbcf..4345207 100644
+--- a/CMake/HHVMExtensionConfig.cmake
++++ b/CMake/HHVMExtensionConfig.cmake
+@@ -1065,6 +1065,18 @@ function (HHVM_EXTENSION_INTERNAL_HANDLE_LIBRARY_DEPENDENCY extensionID dependen
+       HHVM_EXTENSION_INTERNAL_ADD_INCLUDE_DIRS(${WATCHMANCLIENT_INCLUDE_DIRS})
+       HHVM_EXTENSION_INTERNAL_ADD_LINK_LIBRARIES(${WATCHMANCLIENT_LIBRARIES})
+     endif()
++  elseif (${libraryName} STREQUAL "antlr3c")
++    find_package(Antlr3c ${requiredVersion})
++    if (NOT Antlr3c_INCLUDE_DIR OR NOT Antlr3c_LIB)
++      HHVM_EXTENSION_INTERNAL_SET_FAILED_DEPENDENCY(${extensionID} ${dependencyName})
++      return()
++    endif()
++
++    if (${addPaths})
++      HHVM_EXTENSION_INTERNAL_ADD_INCLUDE_DIRS(${Antlr3c_INCLUDE_DIR})
++      HHVM_EXTENSION_INTERNAL_ADD_LINK_LIBRARIES(${Antlr3c_LIB})
++      HHVM_EXTENSION_INTERNAL_ADD_DEFINES("-DHAVE_LIBANTLR3C")
++    endif()
+   else()
+     message(FATAL_ERROR "Unknown library '${originalLibraryName}' as a dependency of the '${HHVM_EXTENSION_${extensionID}_PRETTY_NAME}' extension!")
+   endif()
+diff --git a/hphp/util/hphp-config.h.in b/hphp/util/hphp-config.h.in
+index bb2bd9a..cf7f2eb 100644
+--- a/hphp/util/hphp-config.h.in
++++ b/hphp/util/hphp-config.h.in
+@@ -93,7 +93,7 @@ ${HHVM_COMPILES_DEFINE_STRING}
+ #endif
+ 
+ #ifdef USE_CMAKE
+-# if ${HHVM_EXTENSION_COUNT} != 89
++# if ${HHVM_EXTENSION_COUNT} != 90
+ #  error You need to update the config file for the new builtin extension, and add the define to the FB section
+ # endif
+ ${HHVM_EXTENSIONS_ENABLED_DEFINE_STRING}
+@@ -174,6 +174,7 @@ ${HHVM_EXTENSIONS_ENABLED_DEFINE_STRING}
+ # define ENABLE_EXTENSION_STRING 1
+ # define ENABLE_EXTENSION_THREAD 1
+ # define ENABLE_EXTENSION_THRIFT 1
++# define ENABLE_EXTENSION_VAEQL 1
+ # define ENABLE_EXTENSION_URL 1
+ # define ENABLE_EXTENSION_WDDX 1
+ # define ENABLE_EXTENSION_WEAKREF 1
