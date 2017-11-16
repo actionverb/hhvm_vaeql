@@ -1,2 +1,6 @@
+CMake*
+Makefile
+cmake_install.make
 *.o
 *.so
+run-test
